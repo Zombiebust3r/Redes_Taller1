@@ -1,0 +1,4 @@
+﻿  main.cpp
+d:\docs\uni segundo semestre tercero\redes\projects\basic\proyecto\proyecto\main.cpp(116): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
+  proyecto.vcxproj -> D:\Docs\UNI SEGUNDO SEMESTRE TERCERO\Redes\Projects\Basic\proyecto\x64\Debug\proyecto.exe
+  proyecto.vcxproj -> D:\Docs\UNI SEGUNDO SEMESTRE TERCERO\Redes\Projects\Basic\proyecto\x64\Debug\proyecto.pdb (Partial PDB)
