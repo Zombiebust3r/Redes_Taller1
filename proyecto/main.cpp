@@ -16,6 +16,7 @@ int main()
 	char buffer[2000];
 	std::size_t received;
 	std::string text = "Connected to: ";
+	int ticks = 0;
 
 	std::cout << "Enter (s) for Server, Enter (c) for Client: ";
 	std::cin >> connectionType;
@@ -31,21 +32,26 @@ int main()
 	}
 	else if (connectionType == 'c')
 	{
-
-		st = socket.connect(ip, 5000, sf::seconds(5.f));
+		do {
+			ticks++;
+			st = socket.connect(ip, 5000, sf::seconds(5.f));
+			if(st != sf::Socket::Status::Done) std::cout << "NO SE PUDO CONECTAR PENDEJO TRAS 5s" << std::endl;
+		} while (st != sf::Socket::Status::Done && ticks < 2);
+		
 		text += "Client";
 		mode = 'r';
 
-
 	}
+	if (st == sf::Socket::Status::Done) {
+		socket.send(text.c_str(), text.length() + 1);
+		socket.receive(buffer, sizeof(buffer), received);
 
-	socket.send(text.c_str(), text.length() + 1);
-	socket.receive(buffer, sizeof(buffer), received);
-
-	std::cout << buffer << std::endl;
+		std::cout << buffer << std::endl;
+	}
+	
 
 	bool done = false;
-	while (!done && st != sf::Socket::Status::Disconnected)
+	while (!done && (st == sf::Socket::Status::Done))
 	{
 
 		std::vector<std::string> aMensajes;
@@ -85,7 +91,8 @@ int main()
 				switch (evento.type)
 				{
 				case sf::Event::Closed:
-					st = sf::Socket::Status::Disconnected;
+					//DISCONECT FROM SERVER
+					done = true;
 					window.close();
 					break;
 				case sf::Event::KeyPressed:
