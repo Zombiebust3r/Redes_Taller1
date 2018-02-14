@@ -3,13 +3,51 @@
 #include <string>
 #include <cstring>
 #include <iostream>
+#include <mutex>
+#include <thread>
+#include <time.h>
 
 
 #define MAX_MENSAJES 25
 
+std::vector<std::string> aMensajes;
+std::mutex myMutex;
+bool connected;
+
+//Hacer que cliente y servidor tengan mensajes de diferente color
+struct Message {
+	std::string s;
+	sf::Color textColor;
+};
+
+void addMessage(std::string s) {
+	std::lock_guard<std::mutex> guard(myMutex);
+	aMensajes.push_back(s);
+	if (aMensajes.size() > 25) {
+		aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+	}
+}
+
+void receiveFunction(sf::TcpSocket* socket, bool* _connected) {
+	char receiveBuffer[2000];
+	std::size_t _received;
+	while (*_connected) {
+		socket->receive(receiveBuffer, sizeof(receiveBuffer), _received);
+		if (_received > 0) {
+			addMessage(receiveBuffer);
+			if (strcmp(receiveBuffer, " >exit") == 0) {
+				std::cout << "EXIT" << std::endl;
+				*_connected = false;
+				addMessage("DISONNECTED FROM CHAT");
+			}
+		}
+	}
+}
 
 int main()
 {
+	std::thread receiveThread;
+	connected = false;
 	sf::IpAddress ip = sf::IpAddress::getLocalAddress();
 	sf::TcpSocket socket;
 	char connectionType, mode;
@@ -17,7 +55,11 @@ int main()
 	std::size_t received;
 	std::string text = "Connected to: ";
 	int ticks = 0;
+	std::string windowName;
 
+	srand(time(NULL));
+	sf::Color color(rand() % 255 + 0, rand() % 255 + 0, rand() % 255 + 0, 255);
+	
 	bool serv;
 
 	std::cout << "Enter (s) for Server, Enter (c) for Client: ";
@@ -26,6 +68,7 @@ int main()
 	if (connectionType == 's')
 	{
 		serv = true;
+		windowName = "Server Chat Window";
 		sf::TcpListener listener;
 		listener.listen(5000);
 		st = listener.accept(socket);
@@ -44,6 +87,7 @@ int main()
 		
 		text += "Client";
 		mode = 'r';
+		windowName = "Client Chat Window";
 
 	}
 	if (st == sf::Socket::Status::Done) {
@@ -51,19 +95,21 @@ int main()
 		socket.receive(buffer, sizeof(buffer), received);
 
 		std::cout << buffer << std::endl;
+		connected = true;
+		receiveThread = std::thread(receiveFunction, &socket, &connected);
+
+		std::cout << buffer << std::endl;
 	}
 	
 
 	bool done = false;
-	while (!done && (st == sf::Socket::Status::Done))
+	while (!done && (st == sf::Socket::Status::Done) && connected)
 	{
-
-		std::vector<std::string> aMensajes;
 
 		sf::Vector2i screenDimensions(800, 600);
 
 		sf::RenderWindow window;
-		window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "Chat");
+		window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), windowName);
 
 		sf::Font font;
 		if (!font.loadFromFile("courbd.ttf"))
@@ -74,6 +120,7 @@ int main()
 		std::string mensaje = " >";
 
 		sf::Text chattingText(mensaje, font, 14);
+		
 		chattingText.setFillColor(sf::Color(0, 160, 0));
 		chattingText.setStyle(sf::Text::Bold);
 
@@ -106,12 +153,15 @@ int main()
 					{
 						char* jaja = "";
 						socket.send(mensaje.c_str(), mensaje.length() + 1);
-						aMensajes.push_back(mensaje);
-						if (aMensajes.size() > 25)
-						{
-							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+						addMessage(mensaje);
+						if (strcmp(mensaje.c_str(), " >exit") == 0) {
+							std::cout << "EXIT" << std::endl;
+							addMessage("YOU DISCONNECTED FROM CHAT");
+							connected = false;
+							done = true;
+							window.close();
 						}
-						mensaje = ">";
+						mensaje = " >";
 					}
 					break;
 				case sf::Event::TextEntered:
@@ -122,20 +172,26 @@ int main()
 					break;
 				}
 			}
-		if (!serv)
-		{
-			socket.receive(buffer, sizeof(buffer), received);
-			if (received > 0)
+			/*if (!serv)
 			{
-				std::cout << "Received: " << buffer << std::endl;
-				aMensajes.push_back(buffer);
+				receiveFunction(&socket);
 				serv = true;
-				if (strcmp(buffer, "exit") == 0)
+				socket.receive(buffer, sizeof(buffer), received);
+				if (received > 0)
 				{
-					break;
+					std::cout << "Received: " << buffer << std::endl;
+					aMensajes.push_back(buffer);
+					serv = true;
+					if (strcmp(buffer, " >exit") == 0)
+					{
+						//Desconectar
+						done = true;
+						break;
+					}
 				}
-			}
-		}
+			}*/
+
+
 			window.draw(separator);
 			for (size_t i = 0; i < aMensajes.size(); i++)
 			{
@@ -152,6 +208,7 @@ int main()
 			window.display();
 			window.clear();
 		}
+		receiveThread.join();
 	}
 
 }
