@@ -1,4 +1,4 @@
 ﻿  main.cpp
-d:\documentos\github\redes_taller1\proyecto\main.cpp(126): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
-  proyecto.vcxproj -> D:\Documentos\GitHub\Redes_Taller1\x64\Debug\proyecto.exe
-  proyecto.vcxproj -> D:\Documentos\GitHub\Redes_Taller1\x64\Debug\proyecto.pdb (Partial PDB)
+e:\yosm\documents\uni\3r\3r2sem\redes\redes_taller1\proyecto\main.cpp(143): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
+  proyecto.vcxproj -> E:\Yosm\Documents\uni\3r\3r2sem\redes\Redes_Taller1\x64\Debug\proyecto.exe
+  proyecto.vcxproj -> E:\Yosm\Documents\uni\3r\3r2sem\redes\Redes_Taller1\x64\Debug\proyecto.pdb (Partial PDB)

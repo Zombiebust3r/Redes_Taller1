@@ -18,11 +18,14 @@ int main()
 	std::string text = "Connected to: ";
 	int ticks = 0;
 
+	bool serv;
+
 	std::cout << "Enter (s) for Server, Enter (c) for Client: ";
 	std::cin >> connectionType;
 	sf::Socket::Status st;
 	if (connectionType == 's')
 	{
+		serv = true;
 		sf::TcpListener listener;
 		listener.listen(5000);
 		st = listener.accept(socket);
@@ -32,6 +35,7 @@ int main()
 	}
 	else if (connectionType == 'c')
 	{
+		serv = false;
 		do {
 			ticks++;
 			st = socket.connect(ip, 5000, sf::seconds(5.f));
@@ -67,7 +71,7 @@ int main()
 			std::cout << "Can't load the font file" << std::endl;
 		}
 
-		sf::String mensaje = " >";
+		std::string mensaje = " >";
 
 		sf::Text chattingText(mensaje, font, 14);
 		chattingText.setFillColor(sf::Color(0, 160, 0));
@@ -98,8 +102,10 @@ int main()
 				case sf::Event::KeyPressed:
 					if (evento.key.code == sf::Keyboard::Escape)
 						window.close();
-					else if (evento.key.code == sf::Keyboard::Return)
+					else if (evento.key.code == sf::Keyboard::Return) //envia mensaje
 					{
+						char* jaja = "";
+						socket.send(mensaje.c_str(), mensaje.length() + 1);
 						aMensajes.push_back(mensaje);
 						if (aMensajes.size() > 25)
 						{
@@ -111,11 +117,25 @@ int main()
 				case sf::Event::TextEntered:
 					if (evento.text.unicode >= 32 && evento.text.unicode <= 126)
 						mensaje += (char)evento.text.unicode;
-					else if (evento.text.unicode == 8 && mensaje.getSize() > 0)
-						mensaje.erase(mensaje.getSize() - 1, mensaje.getSize());
+					else if (evento.text.unicode == 8 && mensaje.length() > 0)
+						mensaje.erase(mensaje.length() - 1, mensaje.length());
 					break;
 				}
 			}
+		if (!serv)
+		{
+			socket.receive(buffer, sizeof(buffer), received);
+			if (received > 0)
+			{
+				std::cout << "Received: " << buffer << std::endl;
+				aMensajes.push_back(buffer);
+				serv = true;
+				if (strcmp(buffer, "exit") == 0)
+				{
+					break;
+				}
+			}
+		}
 			window.draw(separator);
 			for (size_t i = 0; i < aMensajes.size(); i++)
 			{
