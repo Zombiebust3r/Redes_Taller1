@@ -1,7 +1,5 @@
 ﻿  main.cpp
 d:\documentos\github\redes_taller1\proyecto\main.cpp(59): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-d:\documentos\github\redes_taller1\proyecto\main.cpp(197): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
-d:\documentos\github\redes_taller1\proyecto\main.cpp(229): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-d:\documentos\github\redes_taller1\proyecto\main.cpp(380): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
+d:\documentos\github\redes_taller1\proyecto\main.cpp(198): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
   proyecto.vcxproj -> D:\Documentos\GitHub\Redes_Taller1\x64\Debug\proyecto.exe
   proyecto.vcxproj -> D:\Documentos\GitHub\Redes_Taller1\x64\Debug\proyecto.pdb (Partial PDB)
