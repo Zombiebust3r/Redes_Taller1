@@ -12,7 +12,17 @@
 
 std::vector<std::string> aMensajes;
 std::mutex myMutex;
-bool connected;
+bool connected = false;
+std::thread receiveThread;
+sf::IpAddress ip = sf::IpAddress::getLocalAddress();
+sf::TcpSocket socket;
+char connectionType, mode;
+char buffer[2000];
+std::size_t received;
+std::string text = "Connected to: ";
+int ticks = 0;
+std::string windowName;
+sf::Socket::Status st;
 
 //Hacer que cliente y servidor tengan mensajes de diferente color
 struct Message {
@@ -44,63 +54,22 @@ void receiveFunction(sf::TcpSocket* socket, bool* _connected) {
 	}
 }
 
-int main()
-{
-	std::thread receiveThread;
-	connected = false;
-	sf::IpAddress ip = sf::IpAddress::getLocalAddress();
-	sf::TcpSocket socket;
-	char connectionType, mode;
-	char buffer[2000];
-	std::size_t received;
-	std::string text = "Connected to: ";
-	int ticks = 0;
-	std::string windowName;
-
-	srand(time(NULL));
-	sf::Color color(rand() % 255 + 0, rand() % 255 + 0, rand() % 255 + 0, 255);
-	
-	bool serv;
-
-	std::cout << "Enter (s) for Server, Enter (c) for Client: ";
-	std::cin >> connectionType;
-	sf::Socket::Status st;
-	if (connectionType == 's')
-	{
-		serv = true;
-		windowName = "Server Chat Window";
-		sf::TcpListener listener;
-		listener.listen(5000);
-		st = listener.accept(socket);
-		text += "Server";
-		mode = 's';
-		listener.close();
-	}
-	else if (connectionType == 'c')
-	{
-		serv = false;
-		do {
-			ticks++;
-			st = socket.connect(ip, 5000, sf::seconds(5.f));
-			if(st != sf::Socket::Status::Done) std::cout << "NO SE PUDO CONECTAR PENDEJO TRAS 5s" << std::endl;
-		} while (st != sf::Socket::Status::Done && ticks < 2);
-		
-		text += "Client";
-		mode = 'r';
-		windowName = "Client Chat Window";
-
-	}
+void nonBlockedComunication() {
 	if (st == sf::Socket::Status::Done) {
 		socket.send(text.c_str(), text.length() + 1);
 		socket.receive(buffer, sizeof(buffer), received);
 
 		std::cout << buffer << std::endl;
 		connected = true;
-		receiveThread = std::thread(receiveFunction, &socket, &connected);
 
 		std::cout << buffer << std::endl;
 	}
-	
+
+}
+
+void blockeComunication() {
+
+	receiveThread = std::thread(receiveFunction, &socket, &connected);
 
 	bool done = false;
 	while (!done && (st == sf::Socket::Status::Done) && connected)
@@ -120,7 +89,7 @@ int main()
 		std::string mensaje = " >";
 
 		sf::Text chattingText(mensaje, font, 14);
-		
+
 		chattingText.setFillColor(sf::Color(0, 160, 0));
 		chattingText.setStyle(sf::Text::Bold);
 
@@ -174,21 +143,21 @@ int main()
 			}
 			/*if (!serv)
 			{
-				receiveFunction(&socket);
-				serv = true;
-				socket.receive(buffer, sizeof(buffer), received);
-				if (received > 0)
-				{
-					std::cout << "Received: " << buffer << std::endl;
-					aMensajes.push_back(buffer);
-					serv = true;
-					if (strcmp(buffer, " >exit") == 0)
-					{
-						//Desconectar
-						done = true;
-						break;
-					}
-				}
+			receiveFunction(&socket);
+			serv = true;
+			socket.receive(buffer, sizeof(buffer), received);
+			if (received > 0)
+			{
+			std::cout << "Received: " << buffer << std::endl;
+			aMensajes.push_back(buffer);
+			serv = true;
+			if (strcmp(buffer, " >exit") == 0)
+			{
+			//Desconectar
+			done = true;
+			break;
+			}
+			}
 			}*/
 
 
@@ -209,6 +178,80 @@ int main()
 			window.clear();
 		}
 		receiveThread.join();
+	}
+}
+
+int main()
+{
+	srand(time(NULL));
+	sf::Color color(rand() % 255 + 0, rand() % 255 + 0, rand() % 255 + 0, 255);
+
+	bool serv;
+	std::string serverMode;
+
+	std::cout << "Enter (s) for Server, Enter (c) for Client: ";
+	std::cin >> connectionType;
+
+	if (connectionType == 's')
+	{
+		serv = true;
+		windowName = "Server Chat Window";
+		std::cout << "Enter (b) for Blocking, Enter (n) for NonBlocking: ";
+		std::cin >> serverMode;
+
+		sf::TcpListener listener;
+		listener.listen(5000);
+		if (strcmp(serverMode.c_str(), "b") == 0) st = listener.accept(socket);
+		else if (strcmp(serverMode.c_str(), "n") == 0) {
+			listener.setBlocking(false);
+			while (true) {
+				st = listener.accept(socket);
+				if (st == sf::Socket::Status::Done) {
+					break;
+				}
+				else if (st == sf::Socket::Status::NotReady) {
+					std::cout << "NOT READY" << std::endl;
+				}
+			}
+		}
+
+		text += "Server";
+		mode = 's';
+		listener.close();
+	}
+	else if (connectionType == 'c')
+	{
+		serv = false;
+		do {
+			ticks++;
+			st = socket.connect(ip, 5000, sf::seconds(5.f));
+			if (st != sf::Socket::Status::Done) std::cout << "NO SE PUDO CONECTAR PENDEJO TRAS 5s" << std::endl;
+		} while (st != sf::Socket::Status::Done && ticks < 2);
+
+		text += "Client";
+		mode = 'r';
+		windowName = "Client Chat Window";
+
+	}
+
+	if (st == sf::Socket::Status::Done) {
+		socket.send(text.c_str(), text.length() + 1);
+		socket.receive(buffer, sizeof(buffer), received);
+
+		std::cout << buffer << std::endl;
+		connected = true;
+
+		if (connectionType == 'c') {
+			//Recibir tipo de conexión:
+			socket.receive(buffer, sizeof(buffer), received);
+			serverMode = buffer;
+		} else if (connectionType == 's') {
+			//Enviar tipo de conexión:
+			socket.send(serverMode.c_str(), serverMode.length() + 1);
+		}
+
+		if (strcmp(serverMode.c_str(), "b") == 0) { blockeComunication(); }
+		else if (strcmp(serverMode.c_str(), "n") == 0) { std::cout << "NON BLOCKING" << std::endl; system("pause"); }
 	}
 
 }
