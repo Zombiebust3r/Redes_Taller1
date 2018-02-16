@@ -1,5 +1,8 @@
 ﻿  main.cpp
-  Generating code
-  All 93 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  proyecto.vcxproj -> D:\dpeco\network\proyecto\x64\Release\proyecto.exe
+main.cpp(215): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
+main.cpp(333): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
+main.cpp(351): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+  Generando código
+  All 325 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Generación de código finalizada
+  proyecto.vcxproj -> D:\Documentos\GitHub\Redes_Taller1\x64\Release\proyecto.exe

@@ -111,7 +111,6 @@ void nonBlockedComunication() {
 	sf::RectangleShape separator(sf::Vector2f(800, 5));
 	separator.setFillColor(sf::Color(200, 200, 200, 255));
 	separator.setPosition(0, 550);
-	std::cout << "ENDGAME: " << endedGaem << " socketStatus: " << st << " WINDOW: " << window.isOpen() << std::endl;
 	while (!endedGaem && window.isOpen()/*Game not ended*/) {
 		
 		//Receive:
@@ -135,11 +134,10 @@ void nonBlockedComunication() {
 			
 		} else if (st == sf::Socket::Status::Disconnected) {
 			//CONVERSACION TERMINADA
-			break;
+			endedGaem = true;
+			//window.close();
+			//break;
 		}
-		std::cout << "ENDGAME: " << endedGaem << " socketStatus: " << st << " WINDOW: " << window.isOpen() << std::endl;
-		
-
 		
 		
 		//Eventos SFML
@@ -418,7 +416,7 @@ int main()
 		}
 
 		if (strcmp(serverMode.c_str(), "b") == 0) { blockeComunication(); }
-		else if (strcmp(serverMode.c_str(), "n") == 0) { nonBlockedComunication(); std::cout << "NON BLOCKING" << std::endl; system("pause"); }
+		else if (strcmp(serverMode.c_str(), "n") == 0) { nonBlockedComunication(); }
 	}
 
 }
