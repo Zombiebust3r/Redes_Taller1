@@ -44,8 +44,8 @@ void receiveFunction(sf::TcpSocket* socket, bool* _connected) {
 	char receiveBuffer[2000];
 	std::size_t _received;
 	while (*_connected) {
-		socket->receive(receiveBuffer, sizeof(receiveBuffer), _received);
-		if (_received > 0) {
+		sf::Socket::Status rSt = socket->receive(receiveBuffer, sizeof(receiveBuffer), _received);
+		if (rSt == sf::Socket::Status::Done/*_received > 0*/) {
 			addMessage(receiveBuffer);
 			if (strcmp(receiveBuffer, " >exit") == 0) {
 				std::cout << "EXIT" << std::endl;
@@ -391,7 +391,7 @@ int main()
 			ticks++;
 			st = socket.connect(ip, 5000, sf::seconds(5.f));
 			if (st != sf::Socket::Status::Done) std::cout << "NO SE PUDO CONECTAR PENDEJO TRAS 5s" << std::endl;
-		} while (st != sf::Socket::Status::Done && ticks < 2);
+		} while (st != sf::Socket::Status::Done && ticks < 3);
 
 		text += "Client";
 		mode = 'r';
@@ -419,4 +419,5 @@ int main()
 		else if (strcmp(serverMode.c_str(), "n") == 0) { nonBlockedComunication(); }
 	}
 
+	socket.disconnect();
 }
